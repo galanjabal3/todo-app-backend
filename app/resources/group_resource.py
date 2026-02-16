@@ -1,23 +1,37 @@
 from app.resources.base import api_spec, Response, BaseResource
 from app.services.group_service import GroupService
 from app.schemas.group import *
+from app.utils.enums import TagsSwagger
 
 class BaseGroupResource(BaseResource):
     def __init__(self):
         self.service = GroupService()
-        
+
+class MyGroupsResource(BaseGroupResource):
+
+    @api_spec.validate(
+        query=GroupFilter,
+        resp=Response(HTTP_200=ListMyGroupResponseResource),
+        tags=[TagsSwagger.GROUP.value]
+    )
+    def on_get(self, req, resp):
+        self.resource_response(resp=resp, data=self.service.get_all_group_by_member(
+            user_id=req.context["user"]["id"]
+        ))
+
 class GroupsResource(BaseGroupResource):
 
     @api_spec.validate(
         query=GroupFilter,
         resp=Response(HTTP_200=ListGroupResponseResource),
-        tags=["Group"]
+        tags=[TagsSwagger.GROUP.value]
     )
     def on_get(self, req, resp):
         filters = self.generate_filters_resource(req, params_string=["name"])
         page = req.get_param_as_int("page", default=1, required=False)
         limit = req.get_param_as_int("limit", default=100, required=False)
         
+        filters.append({"field": "user_id", "value": req.context["user"]["id"]})
         data, pagination = self.service.get_all_with_filters_and_pagination(
             page=page,
             limit=limit,
@@ -28,7 +42,7 @@ class GroupsResource(BaseGroupResource):
     @api_spec.validate(
         json=GroupPayload,
         resp=Response(HTTP_200=GroupResponseResource),
-        tags=["Group"]
+        tags=[TagsSwagger.GROUP.value]
     )
     def on_post(self, req, resp):
         body = self.parse_body(req, GroupPayload)
@@ -41,7 +55,7 @@ class GroupsWithIdResource(BaseGroupResource):
 
     @api_spec.validate(
         resp=Response(HTTP_200=GroupResponseResource),
-        tags=["Group"]
+        tags=[TagsSwagger.GROUP.value]
     )
     def on_get(self, req, resp, id: str):
         self.resource_response(resp=resp, data=self.service.get_by_id(id=id))
@@ -49,7 +63,7 @@ class GroupsWithIdResource(BaseGroupResource):
     @api_spec.validate(
         json=GroupPayload,
         resp=Response(HTTP_200=GroupResponseResource),
-        tags=["Group"]
+        tags=[TagsSwagger.GROUP.value]
     )
     def on_put(self, req, resp, id: str):
         body = self.parse_body(req, GroupPayload)
@@ -58,7 +72,7 @@ class GroupsWithIdResource(BaseGroupResource):
     
     @api_spec.validate(
         resp=Response(HTTP_200=DeleteResponse),
-        tags=["Group"]
+        tags=[TagsSwagger.GROUP.value]
     )
     def on_delete(self, req, resp, id: str):
         self.resource_response(resp=resp, data=self.service.delete_by_id(id=id))

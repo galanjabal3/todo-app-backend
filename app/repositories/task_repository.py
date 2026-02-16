@@ -11,6 +11,8 @@ class TaskRepository(BaseRepository):
         **BaseRepository.filter_map,
         "title": lambda x, v: x.filter(lambda t: t.title.lower() == v),
         "status": lambda x, v: x.filter(lambda t: t.status == v),
+        "user_id": lambda x, v: x.filter(lambda t: t.assigned_to and str(t.assigned_to.id) == v),
+        "group_id": lambda x, v: x.filter(lambda t: t.group and str(t.group.id) == v),
     }
     
     def __init__(self):

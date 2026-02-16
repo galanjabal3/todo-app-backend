@@ -72,13 +72,13 @@ class TaskDB(db.Entity):
     title = Required(str)
     description = Optional(str, default="")
     due_date = Optional(datetime)
-    status = Required(str, default=StatusTask.TODO.value)
-    attachment = Optional(Json, default=[])  
+    status = Optional(str, default=StatusTask.TODO.value)
+    attachment = Optional(Json)
     
     created_at = Required(datetime, default=lambda: datetime.now(timezone.utc))
     updated_at = Optional(datetime, default=lambda: datetime.now(timezone.utc))
     is_deleted = Required(bool, default=False)
     
     # relasi
-    assigned_to = Optional(UserDB, column="assigned_to_id")
-    group = Optional(GroupDB, column="group_id")
+    assigned_to = Optional(UserDB, column="assigned_to_id", reverse="tasks")
+    group = Optional(GroupDB, column="group_id", reverse="tasks")

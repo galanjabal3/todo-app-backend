@@ -1,3 +1,5 @@
+from uuid import UUID
+from datetime import datetime
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, ConfigDict, field_validator, Field, model_validator
 from app.schemas.base import *
@@ -17,25 +19,25 @@ class UserUpdate(BaseModel):
     username: Optional[str] = Field("", min_length=6, max_length=20)
     full_name: Optional[str] = Field("", min_length=1)
 
-class UserResponse(MyBaseModel):
-    id: str
+class UserResponse(BaseModel):
+    id: UUID
     email: EmailStr
     username: Optional[str] = None
     password: str
     full_name: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
     is_deleted: bool = False
 
     model_config = ConfigDict(from_attributes=True)
 
-class UserPublicResponse(MyBaseModel):
-    id: str
+class UserPublicResponse(BaseModel):
+    id: UUID
     email: EmailStr
     username: Optional[str] = None
     full_name: str
-    created_at: Optional[str] = None
-    updated_at: Optional[str] = None
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -48,11 +50,11 @@ class ListUserPublicResponseResource(ListResponseWithPagination):
 class UserRegisterSchema(BaseModel):
     # Use Field for constraints and clear descriptions
     email: EmailStr
-    password: str = Field(..., min_length=3)  # Industry standard is usually 8+
+    password: str = Field(..., min_length=8)  # Industry standard is usually 8+
     password_confirm: str = Field(..., min_length=8)
     
     # Corrected the syntax error: removed the extra '=""'
-    username: Optional[str] = Field(None, min_length=3, max_length=20)
+    username: Optional[str] = Field(..., min_length=6, max_length=15)
     full_name: str = Field(..., min_length=1)
     
     @model_validator(mode="after")
@@ -81,8 +83,8 @@ class UserLoginResponse(UserPublicResponse):
 class UserLoginResponseResource(BaseResponse):
     data: UserLoginResponse
 
-class UserSimple(MyBaseModel):
-    id: str
+class UserSimple(BaseModel):
+    id: UUID
     full_name: str
     email: EmailStr
     username: Optional[str] = None

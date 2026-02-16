@@ -13,14 +13,12 @@ from app.db.database import init_db
 from app.middlewares.pony_db_session_middleware import PonyDbSessionMiddleware
 from app.middlewares.jwt_middleware import JWTMiddleware
 from app.middlewares.cors_middleware import CORSMiddleware
-
-import app.registry.service_registry   # ⬅️ registry di-load di sini
-from app.container import ServiceContainer
+from app.registry.service_registry import register_services
 
 
 def create_app():
-    # Mark service container as ready AFTER all registry wiring is done
-    ServiceContainer.boot()
+    # Boot services
+    register_services()
 
     # Initialize Database
     init_db()

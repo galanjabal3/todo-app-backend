@@ -1,6 +1,7 @@
 from app.resources.base import api_spec, Response, BaseResource
 from app.services.user_service import UserService
 from app.schemas.user import UserLoginSchema, UserLoginResponseResource, UserRegisterSchema, UserPublicResponseResource
+from app.utils.enums import TagsSwagger
 
 class BaseAuthResource(BaseResource):
     def __init__(self):
@@ -15,7 +16,7 @@ class AuthLoginResource(BaseAuthResource):
             HTTP_200=UserLoginResponseResource,
         ),
         security=[],
-        tags=["Auth"]
+        tags=[TagsSwagger.AUTH.value]
     )
     def on_post(self, req, resp):
         body = self.parse_body(req, UserLoginSchema)
@@ -31,7 +32,7 @@ class AuthRegisterResource(BaseAuthResource):
             HTTP_200=UserPublicResponseResource,
         ),
         security=[],
-        tags=["Auth"]
+        tags=[TagsSwagger.AUTH.value]
     )
     def on_post(self, req, resp):
         body = self.parse_body(req, UserRegisterSchema)

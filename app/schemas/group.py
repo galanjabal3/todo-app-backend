@@ -1,3 +1,5 @@
+from uuid import UUID
+from datetime import datetime
 from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, field_validator
 from app.schemas.base import *
@@ -9,10 +11,10 @@ class GroupFilter(BasePaginationFilter):
 class GroupPayload(BaseModel):
     name: str
 
-class GroupResponse(MyBaseModel):
-    id: str
+class GroupResponse(BaseModel):
+    id: UUID
     name: str
-    created_at: Optional[str] = None
+    created_at: Optional[datetime] = None
     members: List[GroupMemberSimple] = Field(default_factory=list)
     
     model_config = ConfigDict(from_attributes=True)
@@ -23,8 +25,11 @@ class GroupResponseResource(BaseResponse):
 class ListGroupResponseResource(ListResponseWithPagination):
     data: List[GroupResponse]
 
+class ListMyGroupResponseResource(ListResponse):
+    data: List[GroupResponse]
+
 class GroupSimple(BaseModel):
-    id: str
+    id: Union[str, UUID]
     name: str
 
     model_config = ConfigDict(from_attributes=True)

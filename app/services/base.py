@@ -37,7 +37,7 @@ class BaseService(Generic[TRepo]):
     def format_filters(self, filters=None):
         return filters if isinstance(filters, list) else list_filter_dict_to_list(filters=filters or [])
 
-    def get_all_with_filters_and_pagination(self, filters=[], page=1, limit=10, schema_response=None):
+    def get_all_with_filters_and_pagination(self, filters=[], page=1, limit=10, to_model=False, schema_response=None):
         """
         Retrieve all records with filters and pagination.
 
@@ -45,7 +45,7 @@ class BaseService(Generic[TRepo]):
             filters: A list of filters to apply.
             page: The page number for pagination.
             limit: The number of records per page.
-            to_response: The method to transform data to response format.
+            schema_response: The schema to use for serializing the response data.
 
         Returns:
             A tuple containing the filtered data and pagination details.
@@ -58,6 +58,7 @@ class BaseService(Generic[TRepo]):
                 filters=filters,
                 page=page,
                 limit=limit,
+                to_model=to_model,
                 schema_response=schema_response
             )
             
@@ -66,7 +67,7 @@ class BaseService(Generic[TRepo]):
             logger.error(f"Err in get_all_with_filters_and_pagination: {e}", exc_info=e)
             raise
 
-    def get_all_with_filters(self, filters=None, schema_response=None):
+    def get_all_with_filters(self, filters=None, to_model=False, schema_response=None):
         """
         Retrieve all records with filters.
 
@@ -81,18 +82,21 @@ class BaseService(Generic[TRepo]):
         """
         try:
             filters = self.format_filters(filters)
-            datas, _ = self.get_all_with_filters_and_pagination(filters=filters, schema_response=schema_response)
+            datas, _ = self.get_all_with_filters_and_pagination(filters=filters, to_model=to_model, schema_response=schema_response)
             return datas
         except Exception as e:
             logger.error(f"Err in get_all_with_filters: {e}", exc_info=e)
             raise
 
-    def get_by_id(self, id=None, to_model=False, schema_response=None):
+    def get_by_id(self, id=None, to_model=False, schema_response=None, raise_error=True):
         """
         Retrieve a record by its ID.
 
         Args:
             id: The ID of the record to retrieve.
+            to_model: If True, convert the record to a model instance.
+            schema_response: The schema to use for serializing the response data.
+            raise_error: If True, return None instead of raising error when not found.
 
         Returns:
             The record with the specified ID.
@@ -102,7 +106,7 @@ class BaseService(Generic[TRepo]):
         """
         try:
             datas = self.repo.get_by_id(id, to_model=to_model, schema_response=schema_response)
-            if not datas:
+            if not datas and raise_error:
                 not_found(
                     title=f"{self.entity_name} not found",
                     msg=f"{self.entity_name} does not exist"
@@ -113,12 +117,15 @@ class BaseService(Generic[TRepo]):
             logger.error(f"Err in get_by_id: {e}", exc_info=e)
             raise
 
-    def get_one_by_filters(self, filters=None, to_model=False, schema_response=None):
+    def get_one_by_filters(self, filters=None, to_model=False, schema_response=None, raise_error=True):
         """
         Retrieve a single record matching the filters.
 
         Args:
             filters: A list/dict of filters to apply.
+            to_model: If True, convert the record to a model instance.
+            schema_response: The schema to use for serializing the response data.
+            raise_error: If True, return None instead of raising error when not found.
 
         Returns:
             The record matching the filters.
@@ -129,7 +136,7 @@ class BaseService(Generic[TRepo]):
         try:
             filters = self.format_filters(filters)
             datas = self.repo.get_one_by_filters(filters, to_model=to_model, schema_response=schema_response)
-            if not datas:
+            if not datas and raise_error:
                 not_found(
                     title=f"{self.entity_name} not found",
                     msg=f"{self.entity_name} does not exist"
@@ -138,6 +145,14 @@ class BaseService(Generic[TRepo]):
             return datas
         except Exception as e:
             logger.error(f"Err in get_one_by_filters: {e}", exc_info=e)
+            raise
+    
+    def count_all_with_filters(self, filters=None):
+        try:
+            filters = self.format_filters(filters)
+            return self.repo.count_all_with_filters(filters=filters)
+        except Exception as e:
+            logger.error(f"Err in count_all_with_filters: {e}")
             raise
 
     def create(self, data):
@@ -156,7 +171,7 @@ class BaseService(Generic[TRepo]):
         try:
             new_record = self.repo.create(data)
             validated_data = self.repo.schema.model_validate(new_record)
-            return validated_data.model_dump()
+            return validated_data.model_dump(mode="json")
         except Exception as e:
             logger.error(f"Err in create: {e}", exc_info=e)
             raise
@@ -182,7 +197,7 @@ class BaseService(Generic[TRepo]):
                     msg=f"{self.entity_name} does not exist"
                 )
             
-            return self.repo.schema.model_validate(datas).model_dump()
+            return self.repo.schema.model_validate(datas).model_dump(mode="json")
         except Exception as e:
             logger.error(f"Err in update: {e}", exc_info=e)
             raise
@@ -209,7 +224,7 @@ class BaseService(Generic[TRepo]):
                     msg=f"{self.entity_name} does not exist"
                 )
 
-            return self.repo.schema.model_validate(datas).model_dump()
+            return self.repo.schema.model_validate(datas).model_dump(mode="json")
         except Exception as e:
             logger.error(f"Err in update_one_with_filters: {e}", exc_info=e)
             raise

@@ -35,7 +35,7 @@ class UserService(BaseService[UserRepository]):
             if not check_string(password, user_exist.password):
                 unauthorized(msg="Password is incorrect.")
             
-            user_resp = UserPublicResponse.model_validate(user_exist).model_dump()
+            user_resp = UserPublicResponse.model_validate(user_exist).model_dump(mode="json")
             
             token = create_access_token(user_resp)
             
@@ -51,7 +51,7 @@ class UserService(BaseService[UserRepository]):
     def auth_register(self, payload: dict):
         try:
             email = payload.get("email")
-            if self.get_one_by_filters({"email": email}, to_model=True):
+            if self.get_one_by_filters({"email": email}, to_model=True, raise_error=False):
                 conflict("Registration Failed", "This email already exists.")
 
             user_data = UserCreate.model_validate(payload)
@@ -60,7 +60,7 @@ class UserService(BaseService[UserRepository]):
             
             new_user = self.create(user_dict)
             
-            return UserPublicResponse.model_validate(new_user).model_dump()
+            return UserPublicResponse.model_validate(new_user).model_dump(mode="json")
 
         except Exception as e:
             logger.error(f"Err in auth_register: {str(e)}", exc_info=True)

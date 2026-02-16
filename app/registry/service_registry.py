@@ -1,3 +1,6 @@
+"""
+Service Registry - Register semua services
+"""
 from app.container import ServiceContainer
 from app.utils.enums import EntityType
 
@@ -7,7 +10,11 @@ from app.services.group_member_service import GroupMemberService
 from app.services.task_service import TaskService
 
 
-ServiceContainer.register(EntityType.USER, UserService)
-ServiceContainer.register(EntityType.GROUP, GroupService)
-ServiceContainer.register(EntityType.GROUP_MEMBER, GroupMemberService)
-ServiceContainer.register(EntityType.TASK, TaskService)
+def register_services():
+    """Register semua services"""
+    ServiceContainer.register(EntityType.USER, lambda: UserService())
+    ServiceContainer.register(EntityType.GROUP, lambda: GroupService())
+    ServiceContainer.register(EntityType.GROUP_MEMBER, lambda: GroupMemberService())
+    ServiceContainer.register(EntityType.TASK, lambda: TaskService())
+    
+    ServiceContainer.boot()

@@ -8,6 +8,7 @@ class GroupRepository(BaseRepository):
     # Mapping filter fields:
     # q = Query object, v = Value input, t = Table entity
     filter_map = {
+        "ids": lambda x, v: x.filter(lambda t: t.id in v),
         "name": lambda x, v: x.filter(lambda t: t.name.lower() == v),
     }
     

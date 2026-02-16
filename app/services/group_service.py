@@ -24,6 +24,18 @@ class GroupService(BaseService[GroupRepository]):
     @property
     def user_service(self) -> "UserService":
         return ServiceContainer.get(EntityType.USER)
+
+    def get_all_group_by_member(self, user_id: str):
+        group_members = self.group_member_service.get_all_with_filters(filters={
+            "user_id": user_id,
+        }, to_model=True)
+        
+        if not group_members:
+            return []
+        
+        group_ids = {x.group.id: x for x in group_members}
+
+        return self.get_all_with_filters({"ids": list(group_ids.keys())})
     
     def create_group(self, payload: dict = None, user_id: str = None):
         try:
@@ -42,7 +54,7 @@ class GroupService(BaseService[GroupRepository]):
                 "role": GroupRole.ADMIN.value
             })
             
-            return GroupResponse.model_validate(new_group).model_dump()
+            return GroupResponse.model_validate(new_group).model_dump(mode="json")
             
         except Exception as e:
             logger.error(f"Err in create_group: {e}", exc_info=e)

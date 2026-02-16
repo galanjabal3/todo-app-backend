@@ -1,7 +1,6 @@
 import traceback
 import falcon
 import uuid
-from pydantic import ValidationError
 from app.config.config import ENVIRONMENT
 from app.utils.logger import logger
 

@@ -21,3 +21,11 @@ class EntityType(Enum):
 class RoleType(str, Enum):
     ADMIN = 'admin'
     USER = 'user'
+
+
+class TagsSwagger(str, Enum):
+    CORE = "Core"
+    AUTH = "Auth"
+    USER = "User"
+    GROUP = "Group"
+    TASK = "Task"

@@ -1,7 +1,7 @@
 import math
 from typing import Type, Protocol, Optional
 from pydantic import BaseModel
-from pony.orm import db_session, select, desc
+from pony.orm import select, desc
 from app.utils.logger import logger
 
 
@@ -30,6 +30,8 @@ class BaseRepositoryProtocol(Protocol):
     def get_all_with_filters_and_pagination(self, filters=None, page=1, limit=10, order_by="-created_at", to_model=False,  schema_response=None): ...
     
     def get_one_by_filters(self, filters=None, to_model=False, schema_response=None): ...
+
+    def count_all_with_filters(self, filters=None): ...
     
     def create(self, data: dict): ...
     
@@ -110,7 +112,7 @@ class BaseRepository:
                 descending = order_by.startswith("-")
                 field_name = order_by.lstrip("-")
 
-                field = getattr(self.entity, field_name)
+                field = getattr(self.entity, field_name, None)
                 if field:
                     query = query.order_by(desc(field) if descending else field)
             
@@ -144,7 +146,7 @@ class BaseRepository:
             
             schema = schema_response or self.schema
             if schema and query is not None:
-                query = schema.model_validate(query).model_dump()
+                query = schema.model_validate(query).model_dump(mode="json")
             
             return query
         except Exception as e:
@@ -178,8 +180,8 @@ class BaseRepository:
             # Paginate
             page = max(page, 1)
             if limit <= 0:
-                items = query[:]
-                total = len(query) if hasattr(query, '__len__') else query.count()
+                items = list(query)  # ✅ Convert to list
+                total = len(items)
                 total_pages = 1
             else:
                 limit = max(limit, 1)
@@ -187,13 +189,14 @@ class BaseRepository:
                 total_pages = math.ceil(total / limit)
 
                 offset = (page - 1) * limit
-                items = query[offset: offset + limit]
+                # ✅ Use .limit() and .offset() instead of slicing
+                items = list(query.limit(limit, offset=offset))
             
             schema = schema_response or self.schema
 
             if schema and not to_model:
                 items = [
-                    schema.model_validate(obj).model_dump()
+                    schema.model_validate(obj).model_dump(mode="json")
                     for obj in items
                 ]
             
@@ -241,11 +244,43 @@ class BaseRepository:
 
             schema = schema_response or self.schema
             if schema and result is not None:
-                result = schema.model_validate(result).model_dump()
+                result = schema.model_validate(result).model_dump(mode="json")
 
             return result
         except Exception as e:
             logger.error(f"Error in get_one_by_filters: {e}", exc_info=e)
+            raise
+    
+    def count_all_with_filters(self, filters=None):
+        """
+        Count all entities matching the specified filters.
+        
+        Args:
+            filters (list, optional): A list of filter conditions to apply to the query.
+                Defaults to None, which is treated as an empty list.
+        
+        Returns:
+            int: The total count of entities that match the applied filters.
+        
+        Raises:
+            Exception: If an error occurs during the query execution. The error is logged
+                with full traceback information before being re-raised.
+        
+        Example:
+            >>> count = repository.count_all_with_filters(filters=[filter_condition])
+            >>> print(count)
+            5
+        """
+        try:
+            filters = filters or []
+
+            query = select(e for e in self.entity)
+            query = self.apply_query_options(query, filters)
+
+            return query.count()
+
+        except Exception as e:
+            logger.error(f"Error in count_all_with_filters: {e}", exc_info=True)
             raise
 
     # @db_session
@@ -295,7 +330,7 @@ class BaseRepository:
             result = entity_obj
             
             if self.schema and result is not None:
-                result = self.schema.model_validate(result).model_dump()
+                result = self.schema.model_validate(result).model_dump(mode="json")
             
             return result
         except Exception as e:
@@ -325,7 +360,7 @@ class BaseRepository:
             result = entity_obj
             
             if self.schema and result is not None:
-                result = self.schema.model_validate(result).model_dump()
+                result = self.schema.model_validate(result).model_dump(mode="json")
             
             return result
         except Exception as e:

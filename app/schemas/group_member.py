@@ -1,16 +1,15 @@
 from datetime import datetime
-from pydantic import ConfigDict
-from app.schemas.base import MyBaseModel
+from pydantic import ConfigDict, BaseModel
 from app.schemas.user import UserSimple
 
-class GroupMemberCreate(MyBaseModel):
+class GroupMemberCreate(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     group_id: str
     user_id: str
     role: str = "member"
 
-class GroupMemberResponse(MyBaseModel):
+class GroupMemberResponse(BaseModel):
     group: str
     user: str
     role: str

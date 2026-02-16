@@ -9,7 +9,7 @@ from app.utils.http_exceptions import not_found
 if TYPE_CHECKING:
     from app.services.group_service import GroupService
 
-class GroupMemberService(BaseService):
+class GroupMemberService(BaseService[GroupMemberRepository]):
     
     def __init__(self):
         # We pass the repo and the schema variable to the parent
