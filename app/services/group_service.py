@@ -76,8 +76,8 @@ class GroupService(BaseService[GroupRepository]):
         
         token = generate_group_invite_token(group_id, expires_days=expires_days)
         return {
-            # "link": f"https://todo-app-frontend-phi.vercel.app/join/{token}",
-            "link": f"localhost:5173/join/{token}",
+            "link": f"https://taskly-app-lemon.vercel.app/join/{token}",
+            # "link": f"localhost:5173/join/{token}",
             "expires_days": expires_days,  # ← info untuk FE
         }
 

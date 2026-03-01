@@ -32,12 +32,12 @@ class JoinGroupPayload(BaseModel):
     token: str
 
 class InviteResponse(BaseModel):
-    link: str = Field(..., example="https://todo-app-frontend-phi.vercel.app/join/eyJncm91cF9pZCI6ICIxMjMifQ.abc123xyz")
+    link: str = Field(..., example="https://taskly-app-lemon.vercel.app/join/eyJncm91cF9pZCI6ICIxMjMifQ.abc123xyz")
     expires_days: int = Field(..., example=7)
 
 class InviteGroupResponseResource(BaseResponse):
     data: InviteResponse = Field(..., example={
-        "link": "https://todo-app-frontend-phi.vercel.app/join/eyJncm91cF9pZCI6ICIxMjMifQ.abc123xyz",
+        "link": "https://taskly-app-lemon.vercel.app/join/eyJncm91cF9pZCI6ICIxMjMifQ.abc123xyz",
         "expires_days": 7
     })
 
