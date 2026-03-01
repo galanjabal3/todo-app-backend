@@ -20,6 +20,7 @@ class TaskResource(BaseGroupResource):
         limit = req.get_param_as_int("limit", default=100, required=False)
         
         filters.append({"field": "user_id", "value": req.context["user"]["id"]})
+        filters.append({"field": "group_id", "value": None})
         data, pagination = self.service.get_all_with_filters_and_pagination(
             page=page,
             limit=limit,

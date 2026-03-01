@@ -9,3 +9,4 @@ DBNAME = os.getenv("dbname")
 ENVIRONMENT = os.getenv("environment")
 JWT_SECRET = os.getenv("jwt_secret")
 DOMAIN_URLS = os.getenv("domain_urls", "").split(",") if os.getenv("domain_urls") else []
+SECRET_KEY = os.getenv("secret_key")

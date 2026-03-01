@@ -1,3 +1,4 @@
+import uuid
 from app.schemas.task import *
 from app.repositories.base import BaseRepository
 from app.db.models import TaskDB
@@ -11,8 +12,14 @@ class TaskRepository(BaseRepository):
         **BaseRepository.filter_map,
         "title": lambda x, v: x.filter(lambda t: t.title.lower() == v),
         "status": lambda x, v: x.filter(lambda t: t.status == v),
-        "user_id": lambda x, v: x.filter(lambda t: t.assigned_to and str(t.assigned_to.id) == v),
-        "group_id": lambda x, v: x.filter(lambda t: t.group and str(t.group.id) == v),
+        "user_id": lambda x, v: x.filter(
+            lambda t: t.assigned_to and t.assigned_to.id == uuid.UUID(v)
+        ),
+        "group_id": lambda x, v: (
+            x.filter(lambda t: t.group is None)
+            if v in (None, "null", "")
+            else x.filter(lambda t: t.group and t.group.id == uuid.UUID(v))
+        ),
     }
     
     def __init__(self):

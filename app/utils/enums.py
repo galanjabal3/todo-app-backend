@@ -9,6 +9,7 @@ class StatusTask(Enum):
 class GroupRole(str, Enum):
     ADMIN = "admin"
     MEMBER = "member"
+    PENDING = "pending"
 
 
 class EntityType(Enum):

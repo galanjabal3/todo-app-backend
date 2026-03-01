@@ -10,7 +10,7 @@ class GroupMemberRepository(BaseRepository):
     # q = Query object, v = Value input, t = Table entity
     filter_map = {
         "role": lambda x, v: x.filter(lambda t: t.role.lower() == v),
-        "group_id": lambda x, v: x.filter(lambda t: t.group and str(t.group.id) == v),
+        "group_id": lambda x, v: x.filter(lambda t: t.group and t.group.id == uuid.UUID(v)),
         "user_id": lambda x, v: x.filter(lambda t: t.user and t.user.id == uuid.UUID(v)),
     }
     

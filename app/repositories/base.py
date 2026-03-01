@@ -1,4 +1,5 @@
 import math
+import uuid
 from typing import Type, Protocol, Optional
 from pydantic import BaseModel
 from pony.orm import select, desc
@@ -25,7 +26,7 @@ class BaseRepositoryProtocol(Protocol):
     
     def apply_query_options(self, query, filters, order_by=None): ...
     
-    def get_by_id(self, id): ...
+    def get_by_id(self, id, to_model=False, schema_response=None): ...
     
     def get_all_with_filters_and_pagination(self, filters=None, page=1, limit=10, order_by="-created_at", to_model=False,  schema_response=None): ...
     
@@ -33,7 +34,7 @@ class BaseRepositoryProtocol(Protocol):
 
     def count_all_with_filters(self, filters=None): ...
     
-    def create(self, data: dict): ...
+    def create(self, data: dict, to_model: bool = False): ...
     
     def update(self, data: dict): ...
     
@@ -59,7 +60,7 @@ class BaseRepository:
     
     # mapping field to filter → handler
     filter_map = {
-        "id": lambda x, v: x.filter(lambda t: str(t.id) == v),
+        "id": lambda x, v: x.filter(lambda t: t.id == uuid.UUID(v)),
         "is_deleted": lambda x, v: x.filter(lambda t: t.is_deleted == v),
     }
     

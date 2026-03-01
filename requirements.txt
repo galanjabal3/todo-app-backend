@@ -9,3 +9,4 @@ pydantic[email]
 spectree
 PyJWT
 bcrypt
+itsdangerous

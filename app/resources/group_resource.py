@@ -76,3 +76,52 @@ class GroupsWithIdResource(BaseGroupResource):
     )
     def on_delete(self, req, resp, id: str):
         self.resource_response(resp=resp, data=self.service.delete_by_id(id=id))
+
+class GroupInviteResource(BaseGroupResource):
+    @api_spec.validate(
+        resp=Response(HTTP_200=InviteGroupResponseResource),
+        tags=[TagsSwagger.GROUP.value]
+    )
+    def on_get(self, req, resp, id: str):
+        self.resource_response(resp=resp, data=self.service.get_group_invite_token(
+            group_id=id,
+            user_id=req.context["user"]["id"]
+        ))
+
+class GroupPreviewResource(BaseGroupResource):
+    @api_spec.validate(
+        resp=Response(HTTP_200=PreviewGroupResponseResource),
+        tags=[TagsSwagger.GROUP.value]
+    )
+    def on_get(self, req, resp, token: str):
+        self.resource_response(resp=resp, data=self.service.preview_group_by_token(
+            token=token,
+        ))
+
+class RequestJoinGroupResource(BaseGroupResource):
+    @api_spec.validate(
+        json=JoinGroupPayload,
+        resp=Response(HTTP_200=JoinGroupResponseResource),
+        tags=[TagsSwagger.GROUP.value]
+    )
+    def on_post(self, req, resp):
+        body = self.parse_body(req, JoinGroupPayload)
+        self.resource_response(resp=resp, data=self.service.request_join_group_by_token(
+            token=body.get("token"),
+            user_id=req.context["user"]["id"]
+        ))
+
+class ApproveNewMemberGroupResource(BaseGroupResource):
+    @api_spec.validate(
+        json=ApproveNewMemberPayload,
+        resp=Response(HTTP_200=ApproveGroupResponseResource),
+        tags=[TagsSwagger.GROUP.value]
+    )
+    def on_post(self, req, resp, id: str):
+        body = self.parse_body(req, ApproveNewMemberPayload)
+        self.resource_response(resp=resp, data=self.service.approve_member(
+            group_id=id,
+            user_id=body.get("user_id"),
+            admin_id=req.context["user"]["id"],
+            approve=body.get("approve", True)
+        ))

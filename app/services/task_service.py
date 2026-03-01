@@ -105,6 +105,29 @@ class TaskService(BaseService[TaskRepository]):
             # Validate payload (Pydantic)
             validated_payload = TaskUpdate.model_validate(payload).model_dump()
 
+            assigned_to_id = payload.get("assigned_to_id")
+            if "assigned_to_id" in payload:
+                new_user = None
+                if assigned_to_id:  # hanya fetch user jika tidak None
+                    new_user = self.user_service.get_by_id(
+                        id=assigned_to_id,
+                        to_model=True,
+                        raise_error=False,
+                    )
+
+                    if not new_user:
+                        not_found(msg=f"User '{assigned_to_id}' not found")
+
+                    if task.group:
+                        is_member = self.group_member_service.get_one_by_filters(
+                            {"group_id": str(task.group.id), "user_id": assigned_to_id},
+                            raise_error=True,
+                        )
+                        if not is_member:
+                            not_found(msg="User is not in this group")
+
+                validated_payload["assigned_to"] = new_user  # None = unassign
+
             return self.update(validated_payload)
 
         except Exception as e:

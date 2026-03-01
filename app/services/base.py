@@ -155,7 +155,7 @@ class BaseService(Generic[TRepo]):
             logger.error(f"Err in count_all_with_filters: {e}")
             raise
 
-    def create(self, data):
+    def create(self, data, to_model: bool = False):
         """
         Create a new record.
 
@@ -169,7 +169,7 @@ class BaseService(Generic[TRepo]):
             Exception: If an error occurs during record creation.
         """
         try:
-            new_record = self.repo.create(data)
+            new_record = self.repo.create(data, to_model=to_model)
             validated_data = self.repo.schema.model_validate(new_record)
             return validated_data.model_dump(mode="json")
         except Exception as e:

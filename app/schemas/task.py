@@ -4,8 +4,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, model_validator
 from app.utils.enums import StatusTask
 from app.schemas.base import *
-from app.schemas.group import GroupSimple
-from app.schemas.user import UserSimple
+from app.schemas.common import GroupSimple, UserSimple
 
 class TaskFilter(BasePaginationFilter):
     title: Optional[str] = None
@@ -56,6 +55,7 @@ class TaskUpdate(BaseModel):
     description: Optional[str] = ""
     status: Optional[StatusTask] = ""
     due_date: Optional[datetime] = None
+    assigned_to: Optional[str] = None
     attachment: list = Field(default_factory=list)
 
     model_config = ConfigDict(use_enum_values=True)
