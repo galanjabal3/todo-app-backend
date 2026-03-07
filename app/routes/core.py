@@ -8,7 +8,10 @@ from app.resources.group_resource import (
     GroupInviteResource, GroupPreviewResource, LeaveGroupResource,
     RemoveMembersFromGroupResource
 )
-from app.resources.task_resource import TaskResource, TaskWithIdResource, GroupTasksResource
+from app.resources.task_resource import (
+    TaskResource, TaskWithIdResource, GroupTasksResource,
+    TaskAttachmentResource, TaskAttachmentWithIdResource
+)
 
 def register_auth_routes(add):
     add("/login", AuthLoginResource(), base="/auth")
@@ -30,6 +33,8 @@ def register_group_routes(add):
 def register_task_routes(add):
     add("/user/tasks", TaskResource())
     add("/user/tasks/{id}", TaskWithIdResource())
+    add("/user/tasks/{id}/attachments", TaskAttachmentResource())
+    add("/user/tasks/{id}/attachments/{attachment_id}", TaskAttachmentWithIdResource())
 
 def register_routes(app, api_prefix="/api"):
     def add(path, resource, *, base=""):

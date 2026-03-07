@@ -2,6 +2,7 @@ from app.resources.base import api_spec, Response, BaseResource
 from app.services.task_service import TaskService
 from app.schemas.task import *
 from app.utils.enums import TagsSwagger
+from app.utils.http_exceptions import bad_request
 
 class BaseGroupResource(BaseResource):
     def __init__(self):
@@ -74,7 +75,7 @@ class TaskWithIdResource(BaseGroupResource):
         tags=[TagsSwagger.TASK.value]
     )
     def on_delete(self, req, resp, id: str):
-        self.resource_response(resp=resp, data=self.service.delete_by_id(id=id))
+        self.resource_response(resp=resp, data=self.service.delete_task_with_attachments(task_id=id))
 
 class GroupTasksResource(BaseGroupResource):
 
@@ -95,3 +96,48 @@ class GroupTasksResource(BaseGroupResource):
             filters=filters,
         )
         self.resource_response(resp=resp, data=data, pagination=pagination)
+
+class TaskAttachmentResource(BaseGroupResource):
+
+    @api_spec.validate(
+        resp=Response(HTTP_200=TaskResponseResource),
+        tags=[TagsSwagger.TASK.value]
+    )
+    def on_post(self, req, resp, id: str):
+        """Upload a file attachment to a task."""
+        
+        file = req.get_param("file")
+
+        if file is None:
+            bad_request("No file provided")
+
+        file_bytes = file.file.read()
+
+        if len(file_bytes) > 10 * 1024 * 1024:
+            bad_request("File size exceeds 10MB limit")
+
+        result = self.service.upload_attachment(
+            task_id=id,
+            file_bytes=file_bytes,
+            file_name=file.filename or "unknown",
+            content_type=file.type or "application/octet-stream",
+            user_id=req.context["user"]["id"],
+        )
+
+        self.resource_response(resp=resp, data=result)
+
+
+class TaskAttachmentWithIdResource(BaseGroupResource):
+
+    @api_spec.validate(
+        resp=Response(HTTP_200=TaskResponseResource),
+        tags=[TagsSwagger.TASK.value]
+    )
+    def on_delete(self, req, resp, id: str, attachment_id: str):
+        """Delete a specific attachment from a task."""
+        result = self.service.delete_attachment(
+            task_id=id,
+            attachment_id=attachment_id,
+        )
+
+        self.resource_response(resp=resp, data=result)

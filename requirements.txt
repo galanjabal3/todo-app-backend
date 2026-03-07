@@ -1,4 +1,5 @@
 falcon
+falcon-multipart
 pony
 gunicorn
 psycopg2-binary  
@@ -10,3 +11,4 @@ spectree
 PyJWT
 bcrypt
 itsdangerous
+supabase

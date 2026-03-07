@@ -1,5 +1,5 @@
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 from pydantic import BaseModel, ConfigDict, model_validator
 from app.utils.enums import StatusTask
@@ -79,3 +79,22 @@ class TaskResponseResource(BaseResponse):
 
 class ListTaskResponseResource(ListResponseWithPagination):
     data: List[TaskResponse]
+
+class AttachmentUpload(BaseModel):
+    """Schema for file upload validation in Swagger."""
+    file: bytes
+
+    class Config:
+        # Mark as multipart form
+        json_schema_extra = {
+            "example": {"file": "binary"}
+        }
+
+class AttachmentResponse(BaseModel):
+    id: str
+    file_name: str
+    file_url: str
+    file_size: int
+    file_type: str
+    uploaded_by: str
+    uploaded_at: str

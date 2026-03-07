@@ -17,6 +17,7 @@ class EntityType(Enum):
     GROUP = "group"
     GROUP_MEMBER = "group_member"
     TASK = "task"
+    STORAGE = "storage"  # ← tambahkan
 
 
 class RoleType(str, Enum):

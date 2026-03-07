@@ -8,6 +8,7 @@ from app.services.user_service import UserService
 from app.services.group_service import GroupService
 from app.services.group_member_service import GroupMemberService
 from app.services.task_service import TaskService
+from app.services.storage_service import StorageService
 
 
 def register_services():
@@ -16,5 +17,6 @@ def register_services():
     ServiceContainer.register(EntityType.GROUP, lambda: GroupService())
     ServiceContainer.register(EntityType.GROUP_MEMBER, lambda: GroupMemberService())
     ServiceContainer.register(EntityType.TASK, lambda: TaskService())
+    ServiceContainer.register(EntityType.STORAGE, lambda: StorageService())  # ← tambahkan
     
     ServiceContainer.boot()

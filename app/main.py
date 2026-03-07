@@ -1,4 +1,5 @@
 import falcon
+from falcon_multipart.middleware import MultipartMiddleware
 from dotenv import load_dotenv
 
 # Load environment variables from .env
@@ -27,6 +28,7 @@ def create_app():
         CORSMiddleware(),
         JWTMiddleware(),
         PonyDbSessionMiddleware(),
+        MultipartMiddleware()
     ])
 
     register_error_handlers(app) # Register error handlers

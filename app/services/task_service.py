@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from app.services.group_service import GroupService
     from app.services.group_member_service import GroupMemberService
     from app.services.user_service import UserService
+    from app.services.storage_service import StorageService
 
 class TaskService(BaseService[TaskRepository]):
     
@@ -30,6 +31,10 @@ class TaskService(BaseService[TaskRepository]):
     @property
     def user_service(self) -> "UserService":
         return ServiceContainer.get(EntityType.USER)
+
+    @property
+    def storage_service(self) -> "StorageService":
+        return ServiceContainer.get(EntityType.STORAGE)
 
     def create_task(self, payload: dict = None, user_id: str = None):
         try:
@@ -190,3 +195,106 @@ class TaskService(BaseService[TaskRepository]):
             "group_id": group_id,
             "user_id": user_id,
         }, data={"assigned_to": None})
+    
+    # Attachments
+    def upload_attachment(self, task_id: str, file_bytes: bytes, file_name: str, content_type: str, user_id: str) -> dict:
+        """
+        Upload a file attachment to a task.
+        Stores file in Supabase Storage and appends metadata to task.attachment JSON field.
+        """
+        try:
+            task = self.repo.get_by_id(id=task_id, to_model=True)
+            if not task:
+                not_found(msg="Task not found")
+
+            # Upload to Supabase Storage
+            uploaded = self.storage_service.upload_file(
+                file_bytes=file_bytes,
+                file_name=file_name,
+                content_type=content_type,
+                task_id=task_id,
+            )
+
+            # Append to existing attachments
+            current_attachments = task.attachment or []
+            current_attachments.append({
+                **uploaded,
+                "uploaded_by": user_id,
+                "uploaded_at": datetime.now(timezone.utc).isoformat(),
+            })
+
+            task.attachment = current_attachments
+
+            return TaskResponse.model_validate(task).model_dump(mode="json")
+
+        except Exception as e:
+            logger.error(f"Upload attachment error: {e}")
+            raise
+
+    def delete_attachment(self, task_id: str, attachment_id: str) -> dict:
+        """
+        Delete a specific attachment from a task by attachment_id.
+        Removes file from Supabase Storage and updates task.attachment JSON field.
+        """
+        try:
+            task = self.repo.get_by_id(id=task_id, to_model=True)
+            if not task:
+                not_found(msg="Task not found")
+
+            current_attachments = task.attachment or []
+
+            # Find the attachment
+            target = next((a for a in current_attachments if a.get("id") == attachment_id), None)
+            if not target:
+                not_found(msg="Attachment not found")
+
+            # Extract unique file name from URL to delete from storage
+            # URL format: .../task-attachments/<task_id>/<uuid>_<filename>
+            file_url = target.get("file_url", "")
+            unique_file_name = file_url.split(f"{task_id}/")[-1]
+
+            # Delete from Supabase Storage
+            self.storage_service.delete_file(
+                task_id=task_id,
+                unique_file_name=unique_file_name,
+            )
+
+            # Remove from attachment list
+            task.attachment = [a for a in current_attachments if a.get("id") != attachment_id]
+
+            return TaskResponse.model_validate(task).model_dump(mode="json")
+
+        except Exception as e:
+            logger.error(f"Delete attachment error: {e}")
+            raise
+    
+    def delete_task_with_attachments(self, task_id: str) -> bool:
+        """
+        Delete a task and all its attachments from Supabase Storage.
+        """
+        try:
+            task = self.repo.get_by_id(id=task_id, to_model=True)
+            if not task:
+                not_found(msg="Task not found")
+
+            # Remove all attachment from storage
+            attachments = task.attachment or []
+            for att in attachments:
+                unique_file_name = att.get("unique_file_name")
+                if unique_file_name:
+                    try:
+                        self.storage_service.delete_file(
+                            task_id=task_id,
+                            unique_file_name=unique_file_name,
+                        )
+                    except Exception as e:
+                        logger.warning(f"Failed to delete attachment {unique_file_name}: {e}")
+                
+            if attachments:
+                self.storage_service.delete_folder(task_id=task_id)
+
+            return self.delete_by_id(id=task_id, soft_delete=False)
+
+        except Exception as e:
+            logger.error(f"Delete task with attachments error: {e}")
+            raise
